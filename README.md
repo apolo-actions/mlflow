@@ -1,6 +1,6 @@
-# Run your personal MLFlow server on the Neu.ro platform with neuro-flow
+# Run your personal MLFlow server on the Apolo platform with apolo-flow
 
-This is a [`neuro-flow`](https://github.com/neuro-inc/neuro-flow) action launching an instance of [MLFlow server](https://www.mlflow.org/docs/latest/tracking.html).
+This is a [`apolo-flow`](https://github.com/neuro-inc/neuro-flow) action launching an instance of [MLFlow server](https://www.mlflow.org/docs/latest/tracking.html).
 You can use it to track your ML experiments and model trainings, track model in model registry and perform model deployment to production using our integrations [in-job-deployments](https://github.com/neuro-inc/mlops-job-deploy-app) or [MLFlow2Seldon integration](https://github.com/neuro-inc/mlops-k8s-mlflow2seldon), or build own integrations.
 
 The MLFlow action exposes several arguments, one of which is mandatory: `artifacts_destination`.
@@ -121,7 +121,7 @@ args:
     http_auth: "True"
 ```
 
-_**Note**: your training job should be able to communicate with MLFlow guarded by the Neu.ro platform authentication solution. In order to do so, you should put a token of a user (or a service account), which has access the corresponding MLFlow server, into the `MLFLOW_TRACKING_TOKEN` environment variable within the training job._
+_**Note**: your training job should be able to communicate with MLFlow guarded by the Apolo platform authentication solution. In order to do so, you should put a token of a user (or a service account), which has access the corresponding MLFlow server, into the `MLFLOW_TRACKING_TOKEN` environment variable within the training job._
 
 ### `life_span`
 
@@ -159,7 +159,7 @@ args:
 
 ### `preset`
 
-Resource preset to use when running the Jupyter job. `""` by default (i.e., the first preset specified in the `neuro config show` list will be used).
+Resource preset to use when running the Jupyter job. `""` by default (i.e., the first preset specified in the `apolo config show` list will be used).
 
 #### Example
 
@@ -186,6 +186,6 @@ This might happen under the following circumstances:
 1. the mlflow server parameter `--backend_store_uri` is not set (by default, SQLite is used) or set to use SQLite or a regular file
 2. the filesystem used to handle the file for `--backend_store_uri` does not support the file Lock operation (observed with the Azure File NFS solution).
 
-To confirm whether you're running in Azure cloud hit `neuro admin get-clusters`.
+To confirm whether you're running in Azure cloud hit `apolo admin get-clusters`.
 
-A work-around for this is to use a platform `disk:` to host the SQLite data, or to use a dedicated SQL DB, for instance, [PostgreSQL hosted on the platform](https://github.com/neuro-actions/postgres).
+A work-around for this is to use a platform `disk:` to host the SQLite data, or to use a dedicated SQL DB, for instance, [PostgreSQL hosted on the platform](https://github.com/apolo-actions/postgres).

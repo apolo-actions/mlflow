@@ -1,6 +1,6 @@
 kind: live
-name: Neu.ro MLflow server
-author: Neu.ro MLOps team
+name: MLflow server
+author: MLOps team
 descr: Integrate and run MLFlow server in your project.
 
 inputs:
@@ -39,8 +39,8 @@ inputs:
   http_auth:
     default: ""
     descr: |
-      Whether to enable Neu.ro platform-based authentication or not.
-      If disabled (by default) - your MLFlow server will not be protected by Neu.ro SSO.
+      Whether to enable Apolo platform-based authentication or not.
+      If disabled (by default) - your MLFlow server will not be protected by Apolo SSO.
   life_span:
     default: "10d"
     descr: |
