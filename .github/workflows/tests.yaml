@@ -22,5 +22,5 @@ jobs:
 
       - name: Test image
         run: |
-          make test IMAGE_TAG=development IMAGE_NAME=ghcr.io/neuro-inc/mlflow
+          make run-tests IMAGE_TAG=development IMAGE_NAME=ghcr.io/neuro-inc/mlflow
 
