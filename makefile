@@ -21,7 +21,7 @@ clean:
 
 .PHONY: run-server
 run-server:
-	@docker run --rm -it -p 8080:8080 --name mlflow-test-container -d $(IMAGE_NAME):$(IMAGE_TAG) \
+	docker run --rm -it -p 8080:8080 --name mlflow-test-container -d $(IMAGE_NAME):$(IMAGE_TAG) \
 	server --host 0.0.0.0 --port 8080 --artifacts-destination /home --backend-store-uri sqlite:///mydb.sqlite
 
 .PHONY: stop-server

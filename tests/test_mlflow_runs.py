@@ -1,6 +1,8 @@
 import mlflow.experiments
 import pytest
 import mlflow
+from sklearn.linear_model import LinearRegression
+import numpy as np
 
 from mlflow import (
     active_run,
@@ -51,3 +53,36 @@ def test_tags():
         
     fetched_run = get_run(run_id)
     assert fetched_run.data.tags["tag1"] == "value1"
+
+def test_log_artifact():
+    """Test logging and retrieving an artifact."""
+    with start_run() as run:
+        content = "artifact content"
+        with open("test_artifact.txt", "w") as f:
+            f.write(content)
+        mlflow.log_artifact("test_artifact.txt")
+        
+        run_id = run.info.run_id
+        artifact_uri = mlflow.get_artifact_uri("test_artifact.txt")
+        assert "test_artifact.txt" in artifact_uri
+
+def test_register_model():
+    """Test registering a model."""
+    
+    with start_run() as run:
+        X = np.array([[1], [2]])
+        y = np.array([1, 2])
+        model = LinearRegression()
+        model.fit(X, y)
+        
+        mlflow.sklearn.log_model(model, "model")
+        model_uri = f"runs:/{run.info.run_id}/model"
+        registered_model = mlflow.register_model(model_uri, "test_model")
+        
+        assert registered_model.name == "test_model"
+        assert registered_model.version == '1'
+
+        loaded_model = mlflow.sklearn.load_model(f"models:/{registered_model.name}/1")
+        prediction = loaded_model.predict([[3]])
+        assert isinstance(loaded_model, LinearRegression)
+        assert prediction.shape == (1,)
