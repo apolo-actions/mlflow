@@ -23,7 +23,14 @@ jobs:
           registry: ghcr.io
           username: ${{ secrets.GHCRIO_USER }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        if: github.event_name == 'pull_request'
+        uses: docker/metadata-action@v4
+        with:
+            images: ghcr.io/neuro-inc/mlflow
+            tags: |
+              type=ref,event=pr
       - name: Build Docker Image
         run: |
           docker build -t "ghcr.io/neuro-inc/mlflow:development" .
@@ -31,4 +38,8 @@ jobs:
       - name: Test image
         run: |
           make run-tests IMAGE_TAG=development IMAGE_NAME=ghcr.io/neuro-inc/mlflow
+
+      - name: Push Docker Image
+        run: |
+          docker push ghcr.io/neuro-inc/mlflow:development ${{ steps.meta.outputs.tags }}
 
