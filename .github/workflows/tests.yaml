@@ -41,5 +41,6 @@ jobs:
 
       - name: Push Docker Image
         run: |
-          docker push ghcr.io/neuro-inc/mlflow:development ${{ steps.meta.outputs.tags }}
+          docker tag ghcr.io/neuro-inc/mlflow:development ${{ steps.meta.outputs.tags }}
+          docker push ${{ steps.meta.outputs.tags }}
 
