@@ -28,19 +28,19 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: docker/metadata-action@v4
         with:
-            images: ghcr.io/neuro-inc/mlflow
+            images: ghcr.io/apolo-actions/mlflow
             tags: |
               type=ref,event=pr
       - name: Build Docker Image
         run: |
-          docker build -t "ghcr.io/neuro-inc/mlflow:development" .
+          docker build -t "ghcr.io/apolo-actions/mlflow:development" .
 
       - name: Test image
         run: |
-          make run-tests IMAGE_TAG=development IMAGE_NAME=ghcr.io/neuro-inc/mlflow
+          make run-tests IMAGE_TAG=development IMAGE_NAME=ghcr.io/apolo-actions/mlflow
 
       - name: Push Docker Image
         run: |
-          docker tag ghcr.io/neuro-inc/mlflow:development ${{ steps.meta.outputs.tags }}
+          docker tag ghcr.io/apolo-actions/mlflow:development ${{ steps.meta.outputs.tags }}
           docker push ${{ steps.meta.outputs.tags }}
 
