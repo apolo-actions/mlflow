@@ -5,8 +5,14 @@ on:
     types: [ published ]
 
 jobs:
+  tests:
+    name: All checks are passed
+    uses: ./.github/workflows/tests.yaml
+    secrets: inherit
+  
   deploy:
     name: Build and push Docker image
+    needs: tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout commit
