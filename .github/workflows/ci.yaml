@@ -8,6 +8,7 @@ jobs:
   tests:
     name: All checks are passed
     uses: ./.github/workflows/tests.yaml
+    secrets: inherit
     permissions:
       packages: write
   
