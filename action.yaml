@@ -64,7 +64,7 @@ inputs:
       Extra parameters for `mlflow server` command invocation.
 
 job:
-  image: ghcr.io/neuro-inc/mlflow:pipelines
+  image: ghcr.io/apolo-actions/mlflow:pipelines
   name: ${{ inputs.job_name }}
   preset: ${{ inputs.preset }}
   http_port: ${{ inputs.port }}
