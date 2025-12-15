@@ -1,20 +1,24 @@
 from contextlib import asynccontextmanager
 import logging
 import os
-from typing import Any, Dict, List
+
 import requests
-from fastapi import FastAPI
 import uvicorn
-from pydantic import BaseModel
+from fastapi import Depends, FastAPI
+
+from apolo_app_types.dynamic_outputs import (
+    DynamicAppBasicResponse,
+    DynamicAppFilterParams,
+    DynamicAppListResponse,
+    DynamicAppIdResponse,
+    FilterOperator,
+)
 
 from filters import ModelFilter
 
 server_variables = {}
 logger = logging.getLogger(__name__)
 
-class BasicResponse(BaseModel):
-    status: str
-    data: Dict[str, Any] | List[Dict[str, Any]] | None = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -32,28 +36,109 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+
 @app.get('/')
 @app.get('/health')
 @app.get('/healthz')
-async def root() -> BasicResponse:
-    return BasicResponse(status="healthy")
+async def root() -> DynamicAppBasicResponse:
+    return DynamicAppBasicResponse(status="healthy")
+
+
+def build_mlflow_filter(model_filter: ModelFilter) -> str | None:
+    """Build MLflow API filter string from ModelFilter conditions.
+
+    MLflow supports SQL-like filter syntax:
+    - name LIKE '%value%'
+    - name = 'value'
+
+    Args:
+        model_filter: ModelFilter with parsed conditions
+
+    Returns:
+        MLflow filter string or None if no API-compatible filters
+    """
+    mlflow_conditions = []
+
+    for condition in model_filter.conditions:
+        if condition.field == "name":
+            if condition.operator == FilterOperator.LIKE:
+                mlflow_conditions.append(f"name LIKE '%{condition.value}%'")
+            elif condition.operator == FilterOperator.EQ:
+                mlflow_conditions.append(f"name = '{condition.value}'")
+
+    if mlflow_conditions:
+        return " AND ".join(mlflow_conditions)
+    return None
+
+
+def get_local_conditions(model_filter: ModelFilter) -> list:
+    """Get conditions that must be applied locally (not supported by MLflow API).
+
+    Returns conditions for fields other than name with LIKE/EQ operators.
+    """
+    local_conditions = []
+
+    for condition in model_filter.conditions:
+        # Name with LIKE/EQ is handled by MLflow API
+        if condition.field == "name" and condition.operator in (
+            FilterOperator.LIKE,
+            FilterOperator.EQ,
+        ):
+            continue
+        local_conditions.append(condition)
+
+    return local_conditions
+
 
 @app.get('/output')
-async def get_outputs(filter: str | None = None):
+async def get_outputs(
+    params: DynamicAppFilterParams = Depends(),
+) -> DynamicAppListResponse:
     try:
-        res = requests.get(server_variables['MLFLOW_URL'] + '/api/2.0/mlflow/registered-models/search')
+        # Build request params
+        request_params = {}
+
+        # Parse and apply filters
+        model_filter = ModelFilter(params.filter) if params.filter else None
+
+        if model_filter:
+            # Build MLflow API filter for name conditions
+            mlflow_filter = build_mlflow_filter(model_filter)
+            if mlflow_filter:
+                request_params['filter'] = mlflow_filter
+
+        # Fetch from MLflow
+        res = requests.get(
+            server_variables['MLFLOW_URL'] + '/api/2.0/mlflow/registered-models/search',
+            params=request_params,
+        )
         res.raise_for_status()
         json_response = res.json()
         models = json_response.get("registered_models", [])
 
-        # Apply filtering if filter parameter is provided
-        if filter:
-            model_filter = ModelFilter(filter)
-            models = model_filter.apply(models)
+        # Apply local filtering for conditions not supported by MLflow API
+        if model_filter:
+            local_conditions = get_local_conditions(model_filter)
+            if local_conditions:
+                # Create a temporary filter with only local conditions
+                temp_filter = ModelFilter(None)
+                temp_filter.conditions = local_conditions
+                models = temp_filter.apply(models)
 
-        return BasicResponse(status="success", data=models)
+        # Apply pagination
+        models = models[params.offset : params.offset + params.limit]
+
+        # Transform to response format
+        data = [
+            DynamicAppIdResponse(id=model.get("name", ""), value=model)
+            for model in models
+        ]
+
+        return DynamicAppListResponse(status="success", data=data)
     except requests.RequestException as e:
-        return {'error': str(e)}
+        logger.error(f"MLflow request failed: {e}")
+        return DynamicAppListResponse(status="error", data=None)
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
