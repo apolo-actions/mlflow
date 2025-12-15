@@ -2,7 +2,7 @@
 name = "outputs-server"
 version = "0.1.0"
 description = "MLflow outputs server proxy"
-authors = ["Your Name <you@example.com>"]
+authors = ["MLops Apolo Team <mlops@apolo.us>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
