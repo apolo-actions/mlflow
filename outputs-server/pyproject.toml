@@ -10,7 +10,7 @@ python = "^3.11"
 fastapi = "^0.115.0"
 uvicorn = {extras = ["standard"], version = "^0.34.0"}
 requests = "^2.32.0"
-apolo-app-types = "^25.12.0"
+apolo-app-types = "^25.12.1"
 
 [build-system]
 requires = ["poetry-core"]
