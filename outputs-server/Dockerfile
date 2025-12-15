@@ -1,38 +1,61 @@
-FROM python:3.11-slim
+# Multi-stage Dockerfile for MLflow Outputs Server
+# Stage 1: Builder
+FROM python:3.11-slim AS builder
+
+# Install poetry
+RUN pip install --no-cache-dir poetry==1.8.3
+
+# Set working directory
+WORKDIR /build
+
+# Copy dependency files
+COPY pyproject.toml ./
+
+# Configure poetry to not create virtual env (we're in a container)
+RUN poetry config virtualenvs.create false
+
+# Install dependencies
+RUN poetry install --no-dev --no-root --no-interaction --no-ansi
+
+# Stage 2: Runtime
+FROM python:3.11-slim AS runtime
+
+# Install runtime dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN groupadd -r appuser && \
+    useradd -r -g appuser -u 1000 -m -s /sbin/nologin appuser
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy Python version and dependency files
-COPY .python-version .
-COPY pyproject.toml .
-COPY uv.lock ./
-
-# Install uv for faster dependency management
-RUN pip install uv
-
-# Install Python dependencies
-RUN uv sync --frozen
+# Copy Python packages from builder
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
-COPY main.py .
+COPY main.py filters.py ./
 
-# Create non-root user for security
-RUN useradd --create-home --shell /bin/bash app \
-    && chown -R app:app /app
-USER app
+# Set permissions
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
 
 # Expose port
-EXPOSE 8080
+EXPOSE 8000
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:80/healthz || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz').read()" || exit 1
 
 # Run the application
-CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0", "--port", "8000"]
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

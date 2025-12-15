@@ -1,11 +1,17 @@
-[project]
+[tool.poetry]
 name = "outputs-server"
 version = "0.1.0"
-description = "Add your description here"
+description = "MLflow outputs server proxy"
+authors = ["MLops Apolo Team <mlops@apolo.us>"]
 readme = "README.md"
-requires-python = ">=3.11"
-dependencies = [
-    "fastapi>=0.115.12",
-    "requests>=2.32.3",
-    "uvicorn>=0.34.3",
-]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.115.0"
+uvicorn = {extras = ["standard"], version = "^0.34.0"}
+requests = "^2.32.0"
+apolo-app-types = "^25.12.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
