@@ -7,6 +7,8 @@ from fastapi import FastAPI
 import uvicorn
 from pydantic import BaseModel
 
+from filters import ModelFilter
+
 server_variables = {}
 logger = logging.getLogger(__name__)
 
@@ -39,10 +41,17 @@ async def root() -> BasicResponse:
 @app.get('/output')
 async def get_outputs(filter: str | None = None):
     try:
-        res = requests.get(server_variables['MLFLOW_URL'] + '/api/2.0/mlflow/registered-models/search', params={'filter': filter})
+        res = requests.get(server_variables['MLFLOW_URL'] + '/api/2.0/mlflow/registered-models/search')
         res.raise_for_status()
         json_response = res.json()
-        return BasicResponse(status="success", data=json_response.get("registered_models", []))
+        models = json_response.get("registered_models", [])
+
+        # Apply filtering if filter parameter is provided
+        if filter:
+            model_filter = ModelFilter(filter)
+            models = model_filter.apply(models)
+
+        return BasicResponse(status="success", data=models)
     except requests.RequestException as e:
         return {'error': str(e)}
 
