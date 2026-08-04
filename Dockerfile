@@ -1,4 +1,4 @@
-FROM continuumio/miniconda3:4.12.0
+FROM continuumio/miniconda3:26.3.2-2
 
 ENV HOME="/root"
 
@@ -15,6 +15,7 @@ RUN apt-get update && \
         libsqlite3-dev \
         libbz2-dev \
         default-libmysqlclient-dev \
+        pkg-config \
         curl \
         && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
