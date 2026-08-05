@@ -15,7 +15,7 @@ jobs:
       local: true
     steps:
       - name: Checkout commit
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
 
       - name: Login to GHCR
         if: github.actor != 'dependabot[bot]'
