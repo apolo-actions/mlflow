@@ -27,7 +27,7 @@ jobs:
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v6
         with:
             images: ghcr.io/apolo-actions/mlflow
             tags: |
