@@ -1,4 +1,4 @@
-FROM continuumio/miniconda3:26.3.2-2
+FROM continuumio/miniconda3:26.5.3-1
 
 ENV HOME="/root"
 
